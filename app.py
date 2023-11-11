@@ -18,7 +18,7 @@ MONGODB_CONNECTION_STRING = 'mongodb+srv://test:sparta@cluster0.f6od9yz.mongodb.
 client = MongoClient(MONGODB_CONNECTION_STRING)
 db = client.dbsparta_plus_week4
 
-SECRET_KEY = 'sparta'
+SECRET_KEY = 'SPARTA'
 
 @app.route('/', methods=['GET'])
 def home():
@@ -49,7 +49,8 @@ def login():
 
 @app.route('/register', methods=['GET'])
 def register():
-    return render_template('register.html')
+    msg = request.args.get('msg')
+    return render_template('register.html', msg=msg)
 
 @app.route('/api/register', methods=['POST'])
 def api_register():
@@ -57,6 +58,10 @@ def api_register():
     pw_receive = request.form.get('pw_give')
     nickname_receive = request.form.get('nickname_give')
     pw_hash = hashlib.sha256(pw_receive.encode('utf-8')).hexdigest()
+    existing_user = db.user.find_one({"id": id_receive})
+    if existing_user:
+        error_msg = f"ID user '{id_receive}' telah digunakan!"
+        return jsonify({'result': 'fail', 'msg': error_msg})
     db.user.insert_one({
         'id': id_receive,
         'pw': pw_hash,
@@ -76,7 +81,7 @@ def api_login():
         'pw': pw_hash,
     })
 
-    if result :
+    if result is not None:
         payload = {
             'id': id_receive,
             'exp': datetime.utcnow() + timedelta(seconds=5)
